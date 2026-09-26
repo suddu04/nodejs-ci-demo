@@ -20,4 +20,4 @@ jobs:
         run: cat app.txt
 
       - name: Print Success Message
-        run: echo "CI Pipeline Completed Successfully"
+        run: echo "CI Pipeline Completed Successfully  "
