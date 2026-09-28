@@ -1,5 +1,5 @@
 function getMessage() {
-    return "Welcome to Node.js CI Pipeline";
+    return "Welcome to DevOps Training";
 }
 
 module.exports = { getMessage };
