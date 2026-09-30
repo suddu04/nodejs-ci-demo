@@ -1,11 +1,12 @@
-const fs = require("node:fs");
-const path = require("node:path");
+const fs = require("fs");
 
-const source = path.join(__dirname, "src", "index.js");
-const outputDir = path.join(__dirname, "dist");
-const destination = path.join(outputDir, "app.js");
+if (!fs.existsSync("dist")) {
+    fs.mkdirSync("dist");
+}
 
-fs.mkdirSync(outputDir, { recursive: true });
-fs.copyFileSync(source, destination);
+fs.copyFileSync(
+    "src/index.js",
+    "dist/app.js"
+);
 
-console.log("Application build completed successfully");
+console.log("Build completed successfully");

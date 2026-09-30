@@ -6,6 +6,6 @@ const { getMessage } = require("../src/index");
 test("Application should return the welcome message", () => {
     assert.strictEqual(
         getMessage(),
-        "Welcome to DevOps Training"
+        "Welcome to Node.js CI/CD Pipeline"
     );
 });

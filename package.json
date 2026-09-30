@@ -1,13 +1,10 @@
 {
   "name": "nodejs-ci-demo",
   "version": "1.0.0",
-  "description": "Node.js CI pipeline using GitHub Actions",
   "main": "src/index.js",
   "scripts": {
     "test": "node --test",
-    "build": "node build.js"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "MIT"
+    "build": "node build.js",
+    "start": "node dist/app.js"
+  }
 }
