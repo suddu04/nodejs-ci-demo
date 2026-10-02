@@ -1,7 +1,7 @@
 const http = require("http");
 
 function getMessage() {
-    return "Welcome to Node.js CI/CD Pipeline";
+    return "Welcome to Docker and ECS Fargate";
 }
 
 const server = http.createServer((req, res) => {

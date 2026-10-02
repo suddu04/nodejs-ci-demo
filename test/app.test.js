@@ -6,6 +6,6 @@ const { getMessage } = require("../src/index");
 test("Application should return the welcome message", () => {
     assert.strictEqual(
         getMessage(),
-        "Welcome to Node.js CI/CD Pipeline"
+        "Welcome to Docker and ECS Fargate"
     );
 });
