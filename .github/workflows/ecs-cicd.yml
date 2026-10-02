@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+
   workflow_dispatch:
 
 permissions:
@@ -25,10 +26,10 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: npm
@@ -49,15 +50,10 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
-      - name: Debug OIDC Claims
-        uses: github/actions-oidc-debugger@v1
-        with:
-          audience: sts.amazonaws.com
-
-      - name: Configure AWS Credentials via OIDC
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v5
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
@@ -66,19 +62,22 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build, Tag, and Push Docker Image
+      - name: Build and Push Docker Image
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+          docker build \
+            -t ECRREGISTRY/ECR_REPOSITORY:$IMAGE_TAG .
+
+          docker push \
+            ECRREGISTRY/ECR_REPOSITORY:IMAGETAGecho"image=ECR_REGISTRY/ECRREPOSITORY:IMAGE_TAG" \
+            >> "$GITHUB_OUTPUT"
 
       - name: Render ECS Task Definition
         id: task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@v2
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: ${{ env.ECS_TASK_DEFINITION }}
           container-name: ${{ env.CONTAINER_NAME }}
@@ -87,7 +86,7 @@ jobs:
       - name: Deploy to Amazon ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
-          task-definition: ${{ env.ECS_TASK_DEFINITION }}
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
           service: ${{ env.ECS_SERVICE }}
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
