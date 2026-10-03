@@ -1,7 +1,7 @@
 const http = require("http");
 
 function getMessage() {
-    return "Welcome to Docker and ECS Fargate";
+    return "Version 2 - Docker ECS Deployment Successful";
 }
 
 const server = http.createServer((req, res) => {
