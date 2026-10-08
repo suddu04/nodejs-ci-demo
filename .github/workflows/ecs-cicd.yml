@@ -28,13 +28,11 @@ env:
   CONTAINER_NAME: nodejs-app
 
 jobs:
-
   ci:
     name: Build and Test
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout Code
         uses: actions/checkout@v4
 
@@ -53,7 +51,6 @@ jobs:
       - name: Build Application
         run: npm run build
 
-
   deploy:
     name: Build Docker Image and Deploy to ECS
     needs: ci
@@ -68,7 +65,6 @@ jobs:
       name: production
 
     steps:
-
       - name: Checkout Code
         uses: actions/checkout@v4
 
