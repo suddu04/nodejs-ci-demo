@@ -1,10 +1,23 @@
-name: Node.js Docker ECS CI CD
+name: Node.js Production CI/CD
 
 on:
+  pull_request:
+    branches:
+      - main
+
   push:
     branches:
       - main
+
   workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: production
+  cancel-in-progress: false
 
 env:
   AWS_REGION: ap-south-1
@@ -15,37 +28,54 @@ env:
   CONTAINER_NAME: nodejs-app
 
 jobs:
+
   ci:
-    name: Test Application
+    name: Build and Test
     runs-on: ubuntu-latest
+
     steps:
+
       - name: Checkout Code
         uses: actions/checkout@v4
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
+
       - name: Install Dependencies
         run: npm ci
+
       - name: Run Tests
         run: npm test
+
       - name: Build Application
         run: npm run build
+
 
   deploy:
     name: Build Docker Image and Deploy to ECS
     needs: ci
+
+    if: |
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      github.ref == 'refs/heads/main'
+
     runs-on: ubuntu-latest
+
+    environment:
+      name: production
+
     steps:
+
       - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: arn:aws:iam::147303436477:role/GitHubActions-ECS-Deploy
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
@@ -58,9 +88,19 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+          IMAGE_URI="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
+          echo "Building Docker image:"
+          echo "$IMAGE_URI"
+
+          docker build -t "$IMAGE_URI" .
+
+          echo "Pushing Docker image:"
+          echo "$IMAGE_URI"
+
+          docker push "$IMAGE_URI"
+
+          echo "image=$IMAGE_URI" >> "$GITHUB_OUTPUT"
 
       - name: Render ECS Task Definition
         id: task-def
@@ -77,3 +117,9 @@ jobs:
           service: ${{ env.ECS_SERVICE }}
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
+
+      - name: Verify ECS Service
+        run: |
+          aws ecs describe-services \
+            --cluster "$ECS_CLUSTER" \
+            --services "$ECS_SERVICE"
